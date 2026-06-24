@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ember & Bone — Single-Origin Coffee, Roasted in Small Batches</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+
+  /* ============ DESIGN TOKENS ============ */
+  :root {
+    --color-bg:        #1B1611;   /* near-black espresso */
+    --color-bg-soft:   #221C16;   /* slightly lifted panel */
+    --color-cream:     #F3ECE2;   /* primary text on dark */
+    --color-cream-dim: #C9BFAF;   /* secondary text on dark */
+    --color-amber:     #E2A23B;   /* signature accent — roast amber */
+    --color-amber-dim: #8A6326;   /* muted accent for borders */
+    --color-rust:      #B5512B;   /* secondary warm accent */
+    --color-line:      rgba(243, 236, 226, 0.12);
+
+    --font-display: 'Fraunces', serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    --max-width: 1180px;
+    --space-1: 8px;
+    --space-2: 16px;
+    --space-3: 24px;
+    --space-4: 40px;
+    --space-5: 64px;
+    --space-6: 96px;
+    --space-7: 140px;
+
+    --radius: 4px;
+  }
+
+  /* ============ RESET ============ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--color-bg);
+    color: var(--color-cream);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; text-decoration: none; }
+  ul { list-style: none; }
+  button { font-family: inherit; cursor: pointer; border: none; }
+
+  :focus-visible {
+    outline: 2px solid var(--color-amber);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  .wrap {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0 var(--space-3);
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-amber);
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 15px;
+    transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+  }
+  .btn-primary {
+    background: var(--color-amber);
+    color: #1B1611;
+  }
+  .btn-primary:hover { transform: translateY(-2px); background: #ECB158; }
+  .btn-ghost {
+    border: 1px solid var(--color-line);
+    color: var(--color-cream);
+    background: transparent;
+  }
+  .btn-ghost:hover { border-color: var(--color-amber); color: var(--color-amber); }
+
+  /* ============ HEADER ============ */
+  header.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(27, 22, 17, 0.88);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--color-line);
+  }
+  .nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-2) var(--space-3);
+  }
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-cream);
+  }
+  .logo span { color: var(--color-amber); }
+  nav.primary-nav ul {
+    display: flex;
+    gap: var(--space-4);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-cream-dim);
+  }
+  nav.primary-nav a:hover { color: var(--color-amber); }
+  .nav-actions { display: flex; align-items: center; gap: var(--space-3); }
+  .nav-toggle { display: none; }
+
+  @media (max-width: 860px) {
+    nav.primary-nav { display: none; }
+    .nav-actions .btn-ghost { display: none; }
+  }
+
+  /* ============ HERO ============ */
+  .hero {
+    position: relative;
+    padding: var(--space-7) 0 var(--space-6);
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -200px;
+    right: -160px;
+    width: 560px;
+    height: 560px;
+    background: radial-gradient(circle, rgba(226,162,59,0.16), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: var(--space-6);
+    align-items: center;
+    position: relative;
+  }
+  .hero h1 {
+    font-size: clamp(40px, 5.4vw, 68px);
+    margin: var(--space-2) 0 var(--space-3);
+    color: var(--color-cream);
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--color-amber);
+  }
+  .hero p.lede {
+    font-size: 18px;
+    color: var(--color-cream-dim);
+    max-width: 480px;
+    margin-bottom: var(--space-4);
+  }
+  .hero-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+  .roast-card {
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-line);
+    border-radius: 12px;
+    padding: var(--space-4);
+  }
+  .roast-card h3 {
+    font-size: 16px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    margin-bottom: var(--space-3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .roast-card h3 span.tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-amber);
+    border: 1px solid var(--color-amber-dim);
+    padding: 3px 8px;
+    border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  /* Signature element: roast-level gradient gauge */
+  .roast-gauge {
+    height: 14px;
+    border-radius: 100px;
+    background: linear-gradient(90deg, #D8B27C 0%, #C18A4E 25%, #A8642F 50%, #7A4520 75%, #4A2912 100%);
+    position: relative;
+    margin: var(--space-3) 0 var(--space-2);
+  }
+  .roast-gauge .marker {
+    position: absolute;
+    top: -6px;
+    left: 62%;
+    width: 4px;
+    height: 26px;
+    background: var(--color-cream);
+    border-radius: 2px;
+    box-shadow: 0 0 0 3px rgba(243,236,226,0.18);
+  }
+  .roast-labels {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-cream-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .roast-meta {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-line);
+    font-size: 14px;
+    color: var(--color-cream-dim);
+  }
+  .roast-meta strong { color: var(--color-cream); }
+
+  @media (max-width: 900px) {
+    .hero-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ============ SECTION SHELL ============ */
+  section { padding: var(--space-6) 0; }
+  .section-head {
+    max-width: 620px;
+    margin-bottom: var(--space-5);
+  }
+  .section-head h2 {
+    font-size: clamp(28px, 3.4vw, 40px);
+    margin-top: var(--space-1);
+  }
+  .section-head p {
+    color: var(--color-cream-dim);
+    margin-top: var(--space-2);
+    font-size: 16px;
+  }
+
+  /* ============ THREE-COLUMN FEATURES ============ */
+  .col-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+  }
+  .feature-box {
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-line);
+    border-radius: 10px;
+    padding: var(--space-4);
+    transition: border-color 0.2s ease, transform 0.2s ease;
+  }
+  .feature-box:hover {
+    border-color: var(--color-amber-dim);
+    transform: translateY(-4px);
+  }
+  .feature-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: rgba(226,162,59,0.14);
+    color: var(--color-amber);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin-bottom: var(--space-3);
+  }
+  .feature-box h3 {
+    font-family: var(--font-body);
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: var(--space-1);
+  }
+  .feature-box p { color: var(--color-cream-dim); font-size: 14.5px; }
+
+  @media (max-width: 860px) {
+    .col-grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ============ PROCESS (numbered — real sequence) ============ */
+  .process {
+    background: var(--color-bg-soft);
+    border-top: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-line);
+  }
+  .process-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-3);
+  }
+  .process-step { position: relative; padding-top: var(--space-4); }
+  .process-step .num {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-amber);
+    position: absolute;
+    top: 0; left: 0;
+  }
+  .process-step::before {
+    content: "";
+    position: absolute;
+    top: 4px; left: 36px;
+    right: 0;
+    height: 1px;
+    background: var(--color-line);
+  }
+  .process-step h3 {
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: var(--space-1);
+  }
+  .process-step p { color: var(--color-cream-dim); font-size: 14px; }
+
+  @media (max-width: 860px) {
+    .process-row { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 540px) {
+    .process-row { grid-template-columns: 1fr; }
+  }
+
+  /* ============ TWO-COLUMN SPLIT (testimonial / origin) ============ */
+  .split-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-5);
+    align-items: center;
+  }
+  .origin-figure {
+    background: linear-gradient(135deg, #2B2118, #1B1611);
+    border: 1px solid var(--color-line);
+    border-radius: 12px;
+    aspect-ratio: 4 / 3;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: var(--space-4);
+    position: relative;
+    overflow: hidden;
+  }
+  .origin-figure::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 20%, rgba(226,162,59,0.18), transparent 60%);
+  }
+  .origin-figure .coord {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-amber);
+    letter-spacing: 0.06em;
+    position: relative;
+  }
+  .origin-figure .place {
+    font-family: var(--font-display);
+    font-size: 26px;
+    color: var(--color-cream);
+    position: relative;
+  }
+
+  blockquote {
+    font-family: var(--font-display);
+    font-size: clamp(22px, 2.6vw, 30px);
+    line-height: 1.4;
+    color: var(--color-cream);
+  }
+  .quote-cite {
+    margin-top: var(--space-3);
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--color-cream-dim);
+  }
+  .quote-cite strong { color: var(--color-cream); }
+
+  @media (max-width: 860px) {
+    .split-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ============ NEWSLETTER BAND ============ */
+  .newsletter {
+    background: var(--color-amber);
+    color: #1B1611;
+    border-radius: 14px;
+    padding: var(--space-5) var(--space-5);
+    margin: 0 var(--space-3) var(--space-6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+  .newsletter h2 { font-size: clamp(24px, 3vw, 32px); max-width: 420px; }
+  .newsletter-form {
+    display: flex;
+    gap: var(--space-1);
+    background: #1B1611;
+    padding: 6px;
+    border-radius: 100px;
+  }
+  .newsletter-form input {
+    background: transparent;
+    border: none;
+    padding: 10px 18px;
+    color: var(--color-cream);
+    font-family: var(--font-body);
+    font-size: 14px;
+    width: 220px;
+  }
+  .newsletter-form input::placeholder { color: var(--color-cream-dim); }
+  .newsletter-form button {
+    background: var(--color-amber);
+    color: #1B1611;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 10px 22px;
+    border-radius: 100px;
+  }
+
+  @media (max-width: 700px) {
+    .newsletter { flex-direction: column; align-items: flex-start; }
+    .newsletter-form { width: 100%; }
+    .newsletter-form input { width: 100%; }
+  }
+
+  /* ============ FOOTER ============ */
+  footer.site-footer {
+    border-top: 1px solid var(--color-line);
+    padding: var(--space-6) 0 var(--space-4);
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: var(--space-4);
+    padding-bottom: var(--space-5);
+  }
+  .footer-brand .logo { margin-bottom: var(--space-2); }
+  .footer-brand p {
+    color: var(--color-cream-dim);
+    font-size: 14px;
+    max-width: 260px;
+  }
+  .footer-col h4 {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-cream-dim);
+    margin-bottom: var(--space-2);
+  }
+  .footer-col ul { display: flex; flex-direction: column; gap: 10px; }
+  .footer-col a { font-size: 14.5px; color: var(--color-cream); }
+  .footer-col a:hover { color: var(--color-amber); }
+
+  .footer-bottom {
+    border-top: 1px solid var(--color-line);
+    padding-top: var(--space-3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--color-cream-dim);
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  @media (max-width: 860px) {
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 540px) {
+    .footer-grid { grid-template-columns: 1fr; }
+  }
+
+</style>
+</head>
+<body>
+
+  <!-- ============ HEADER ============ -->
+  <header class="site-header">
+    <div class="wrap nav-row">
+      <a href="#top" class="logo">Ember <span>&</span> Bone</a>
+      <nav class="primary-nav">
+        <ul>
+          <li><a href="#process">Roast Process</a></li>
+          <li><a href="#origins">Origins</a></li>
+          <li><a href="#beans">Beans</a></li>
+          <li><a href="#footer">Visit</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions">
+        <a href="#" class="btn btn-ghost">Sign in</a>
+        <a href="#beans" class="btn btn-primary">Shop beans</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="top">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">Small-batch roastery · Est. 2018</p>
+        <h1>Roasted to the <em>exact</em> minute it tastes best.</h1>
+        <p class="lede">We buy direct from four growing regions, roast in batches under 12kg, and ship within 48 hours of the drum cooling. No blends pretending to be something they're not.</p>
+        <div class="hero-actions">
+          <a href="#beans" class="btn btn-primary">Shop this week's roast</a>
+          <a href="#process" class="btn btn-ghost">See how we roast</a>
+        </div>
+      </div>
+
+      <div class="roast-card">
+        <h3>Current roast <span class="tag">Live batch</span></h3>
+        <div class="roast-gauge">
+          <div class="marker"></div>
+        </div>
+        <div class="roast-labels">
+          <span>Light</span>
+          <span>Medium</span>
+          <span>Dark</span>
+        </div>
+        <div class="roast-meta">
+          <strong>Finca Tres Robles</strong> — Huila, Colombia<br>
+          Dropped at 201°C · 11:42 roast time · Tasting notes: stone fruit, brown sugar, cedar
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FEATURES (3 columns) ============ -->
+  <section id="beans">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Why it tastes different</p>
+        <h2>Three decisions we don't compromise on.</h2>
+        <p>Every box that leaves the roastery passes through the same three checks — on sourcing, on batch size, and on the gap between roast and ship date.</p>
+      </div>
+
+      <div class="col-grid-3">
+        <div class="feature-box">
+          <div class="feature-icon">◐</div>
+          <h3>Single-origin only</h3>
+          <p>No house blends. Every bag names one farm, one harvest, one altitude — so you taste the place, not a formula.</p>
+        </div>
+        <div class="feature-box">
+          <div class="feature-icon">◧</div>
+          <h3>12kg batch ceiling</h3>
+          <p>We cap every drum at 12kg so the roaster can ride the curve by ear instead of trusting an average.</p>
+        </div>
+        <div class="feature-box">
+          <div class="feature-icon">◑</div>
+          <h3>48-hour ship window</h3>
+          <p>Beans peak 5–10 days post-roast. We ship inside two days so that window isn't half gone by the time it arrives.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROCESS (numbered sequence) ============ -->
+  <section class="process" id="process">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">The roast, start to finish</p>
+        <h2>Four stages, one continuous decision.</h2>
+        <p>Roasting isn't a setting — it's a sequence of choices made in real time as the bean changes underneath you.</p>
+      </div>
+
+      <div class="process-row">
+        <div class="process-step">
+          <span class="num">01</span>
+          <h3>Source</h3>
+          <p>Cupped and bought direct from the farm or co-op, locked at a fixed price before harvest.</p>
+        </div>
+        <div class="process-step">
+          <span class="num">02</span>
+          <h3>Rest</h3>
+          <p>Green beans rest 2–4 weeks to stabilize moisture before they ever touch the drum.</p>
+        </div>
+        <div class="process-step">
+          <span class="num">03</span>
+          <h3>Roast</h3>
+          <p>Tracked by sound and smell, not just a timer — first crack changes the plan every time.</p>
+        </div>
+        <div class="process-step">
+          <span class="num">04</span>
+          <h3>Rest again</h3>
+          <p>Bagged, then rested 5 more days off-gassing CO₂ before the window for brewing opens.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ORIGIN + QUOTE (2 columns) ============ -->
+  <section id="origins">
+    <div class="wrap split-grid">
+      <div class="origin-figure">
+        <span class="coord">02°35'N, 76°17'W</span>
+        <span class="place">Huila, Colombia</span>
+      </div>
+      <div>
+        <blockquote>"They told us the price before the harvest even started. That changed how we planted the next season."</blockquote>
+        <p class="quote-cite"><strong>Marisol Peña</strong> — Finca Tres Robles, third-generation grower</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NEWSLETTER ============ -->
+  <div class="newsletter">
+    <h2>Get next week's roast plan before it ships.</h2>
+    <form class="newsletter-form" onsubmit="return false;">
+      <input type="email" placeholder="you@email.com" required>
+      <button type="submit">Notify me</button>
+    </form>
+  </div>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="site-footer" id="footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#top" class="logo">Ember <span>&</span> Bone</a>
+          <p>A small roastery in Portland, OR, buying direct from four growing regions and roasting under 12kg at a time.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Shop</h4>
+          <ul>
+            <li><a href="#">This week's roast</a></li>
+            <li><a href="#">Subscriptions</a></li>
+            <li><a href="#">Brew gear</a></li>
+            <li><a href="#">Gift boxes</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Roastery</h4>
+          <ul>
+            <li><a href="#process">Roast process</a></li>
+            <li><a href="#origins">Origins</a></li>
+            <li><a href="#">Wholesale</a></li>
+            <li><a href="#">Visit the roastery</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Support</h4>
+          <ul>
+            <li><a href="#">Shipping</a></li>
+            <li><a href="#">Returns</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Ember & Bone Roastery. All rights reserved.</span>
+        <span>Portland, Oregon</span>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
